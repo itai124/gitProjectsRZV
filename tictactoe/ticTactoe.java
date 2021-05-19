@@ -7,6 +7,7 @@ public class ticTactoe {
   static final char X_PLAYER = 'X';
   static final char O_PLAYER = 'O';
   static boolean isSaved = false;
+  static final int MAX_TURNS_IN_GAME = 9;
 
   public static void printInstructions() {
     System.out.println("----------------------------------------------");
@@ -29,9 +30,9 @@ public class ticTactoe {
   }
 
   public static void printBoard(Cube[][] ticTacToe) {
-    for (int rowIndex = 0; rowIndex < TIC_TAC_TOE_LENGTH; rowIndex++) {
+    for (int rowIndex = 0; rowIndex < ticTacToe.length; rowIndex++) {
       System.out.print("|");
-      for (int colIndex = 0; colIndex < TIC_TAC_TOE_LENGTH; colIndex++) {
+      for (int colIndex = 0; colIndex < ticTacToe[0].length; colIndex++) {
         System.out.print(ticTacToe[rowIndex][colIndex].getSign() + "|");
       }
       System.out.print("\n");
@@ -51,33 +52,47 @@ public class ticTactoe {
   }
 
   public static String ticTacToe_New_Game() {
+    int currentTurnInNewGame = 0;
     printInstructions();
     char winner = ' ';
     Cube[][] newBoard = createNewBoard(TIC_TAC_TOE_LENGTH);
     printBoard(newBoard);
-    while ((!checkWinner(newBoard) && !checkDraw(newBoard)) && !isSaved) {
+
+    while (!checkWinner(newBoard) && currentTurnInNewGame != MAX_TURNS_IN_GAME && !isSaved) {
       doTurn(newBoard, X_PLAYER);
+      currentTurnInNewGame++;
       printBoard(newBoard);
-      if (checkWinner(newBoard)) {
-        winner = 'X';
-      } else {
-        doTurn(newBoard, O_PLAYER);
-        printBoard(newBoard);
-      }
-      if (checkWinner(newBoard)) {
-        winner = 'O';
+
+      if (currentTurnInNewGame < MAX_TURNS_IN_GAME) {
+
+        if (checkWinner(newBoard)) {
+          winner = 'X';
+        } else {
+          doTurn(newBoard, O_PLAYER);
+          currentTurnInNewGame++;
+          printBoard(newBoard);
+        }
+
+        if (checkWinner(newBoard)) {
+          winner = 'O';
+        }
       }
     }
-    return checkGameOutput(winner);
+
+    if (currentTurnInNewGame < MAX_TURNS_IN_GAME) {
+      return "you decided to leave and save the game.";
+    } else return checkGameOutput(winner);
   }
 
   public static String ticTacToe_Continue_Game(String FILE_PATH) {
     Cube[][] board = readGameFromFile(FILE_PATH);
     char signTurn = checkCurrentTurn(board);
+    int currentTurn = findNumOfTurn(board);
     printBoard(board);
     char startingSign = 'X';
     char secondSign = 'O';
     char winner = ' ';
+
     if (signTurn == 'X') {
       startingSign = X_PLAYER;
       secondSign = O_PLAYER;
@@ -85,29 +100,42 @@ public class ticTactoe {
       startingSign = O_PLAYER;
       secondSign = X_PLAYER;
     } else return "something went wrong with the file";
-    while ((!checkWinner(board) && !checkDraw(board)) && !isSaved) {
+
+    while (!checkWinner(board) && currentTurn != MAX_TURNS_IN_GAME && !isSaved) {
       doTurn(board, startingSign);
+      currentTurn++;
       printBoard(board);
-      if (checkWinner(board)) {
-        winner = startingSign;
-      } else {
-        doTurn(board, secondSign);
-        printBoard(board);
-      }
-      if (checkWinner(board)) {
-        winner = secondSign;
+
+      if (currentTurn < MAX_TURNS_IN_GAME) {
+
+        if (checkWinner(board)) {
+          winner = secondSign;
+        } else {
+          doTurn(board, secondSign);
+          currentTurn++;
+          printBoard(board);
+        }
+
+        if (checkWinner(board)) {
+          winner = startingSign;
+        }
+        currentTurn++;
       }
     }
-    return checkGameOutput(winner);
+    if (currentTurn < MAX_TURNS_IN_GAME) {
+      return "you decided to leave and save the game.";
+    } else return checkGameOutput(winner);
   }
 
   public static String checkGameOutput(char sign) {
     String gameOutput = "this game was a tie!";
+
     if (sign == 'O') {
       gameOutput = "the winner of this game is X";
     } else if (sign == 'X') {
       gameOutput = "the winner of this game is O";
     }
+
     return gameOutput;
   }
 
@@ -115,6 +143,7 @@ public class ticTactoe {
     System.out.println("please enter the row and the col you want to add " + sign + " to: ");
     System.out.print("Row: ");
     String rowSign = input.nextLine();
+
     if (rowSign.equals(" ")) {
       System.out.println("saving file...");
       saveGameToFile(ticTacToe);
@@ -126,10 +155,12 @@ public class ticTactoe {
       String colSign = input.nextLine();
       int col = Integer.parseInt(colSign);
       // col = checkValidRowAndCol(col);
+
       while (ticTacToe[row][col].getSign() == 'X' || ticTacToe[row][col].getSign() == 'O') {
         System.out.println("this place has been taken please enter again.");
         rowSign = input.nextLine();
         colSign = input.nextLine();
+
         if (rowSign.equals(" ")) {
           System.out.println("saving file...");
           saveGameToFile(ticTacToe);
@@ -170,7 +201,7 @@ public class ticTactoe {
             && board[2][0].getSign() == board[2][2].getSign()
             && board[2][2].getSign() != ' ')
         || (board[2][0].getSign() == board[1][1].getSign()
-            && board[0][0].getSign() == board[0][2].getSign()
+            && board[2][0].getSign() == board[0][2].getSign()
             && board[0][2].getSign() != ' ')
         || (board[0][2].getSign() == board[1][2].getSign()
             && board[0][2].getSign() == board[2][2].getSign()
@@ -183,15 +214,20 @@ public class ticTactoe {
             && board[1][0].getSign() != ' ');
   }
 
-  public static boolean checkDraw(Cube[][] board) {
+  public static int findNumOfTurn(Cube[][] board) {
+    int currentTurn = 0;
+
     for (int rowIndex = 0; rowIndex < board.length; rowIndex++) {
       for (int colIndex = 0; colIndex < board[0].length; colIndex++) {
-        if (board[rowIndex][colIndex].getSign() == ' ') {
-          return false;
+
+        if (board[rowIndex][colIndex].getSign() == 'X'
+            || board[rowIndex][colIndex].getSign() == 'O') {
+          currentTurn++;
         }
       }
     }
-    return true;
+
+    return currentTurn;
   }
 
   public static char checkCurrentTurn(Cube[][] board) {
@@ -257,6 +293,7 @@ public class ticTactoe {
           String FILE_PATH = input.nextLine();
           String outputFromGame = ticTacToe_Continue_Game(FILE_PATH);
           System.out.println(outputFromGame);
+
           break;
         case NEW_GAME:
           String outputFromNewGame = ticTacToe_New_Game();
