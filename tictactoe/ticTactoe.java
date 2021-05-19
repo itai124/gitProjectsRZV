@@ -12,7 +12,7 @@ public class ticTactoe {
   public static void printInstructions() {
     System.out.println("----------------------------------------------");
     System.out.println("Welcome to the tic tac toe!");
-    System.out.println("1. The game is played on a grid that's 3 squares by 3 squares.");
+    System.out.println("The game is played on a grid that's 3 squares by 3 squares.");
     System.out.println(
         "You are X, your friend is O. Players take turns putting their marks in empty squares.");
     System.out.println(
@@ -79,7 +79,7 @@ public class ticTactoe {
       }
     }
 
-    if (currentTurnInNewGame < MAX_TURNS_IN_GAME) {
+    if (currentTurnInNewGame < MAX_TURNS_IN_GAME && !checkWinner(newBoard)) {
       return "you decided to leave and save the game.";
     } else return checkGameOutput(winner);
   }
@@ -122,7 +122,7 @@ public class ticTactoe {
         currentTurn++;
       }
     }
-    if (currentTurn < MAX_TURNS_IN_GAME) {
+    if (currentTurn < MAX_TURNS_IN_GAME && !checkWinner(board)) {
       return "you decided to leave and save the game.";
     } else return checkGameOutput(winner);
   }
@@ -187,31 +187,134 @@ public class ticTactoe {
     return rowOrCol;
   }
 
+  public static boolean diagonalWinnerCheck(Cube[][] gameBoard) {
+    boolean currentCheck = false;
+    boolean help = true;
+    for (int index = 1; index < gameBoard.length; index++) {
+      currentCheck =
+          gameBoard[index - 1][index - 1].getSign() == gameBoard[index][index].getSign()
+              && gameBoard[index][index].getSign() != ' '
+              && help;
+      if (!currentCheck) {
+        help = false;
+      }
+    }
+    return currentCheck;
+  }
+
+  public static boolean reverseDiagonalWinnerCheck(Cube[][] gameBoard) {
+    boolean currentCheck = false;
+    boolean help = true;
+    char lastChar = gameBoard[gameBoard.length - 1][0].getSign();
+
+    for (int index = 0; index < gameBoard.length; index++) {
+      currentCheck =
+          gameBoard[gameBoard.length - 1 - index][index].getSign() == lastChar
+              && gameBoard[gameBoard.length - 1 - index][index].getSign() != ' '
+              && help;
+
+      if (!currentCheck) {
+        help = false;
+      }
+      lastChar = gameBoard[gameBoard.length - 1 - index][index].getSign();
+    }
+
+    return currentCheck;
+  }
+
+  public static boolean rowsWinnerCheck(Cube[][] gameBoard) {
+    boolean currentCheck = false;
+    boolean help = true;
+    char lastChar;
+
+    for (int rowIndex = 0; rowIndex < gameBoard.length; rowIndex++) {
+      lastChar = gameBoard[rowIndex][0].getSign();
+
+      for (int colIndex = 1; colIndex < gameBoard[0].length; colIndex++) {
+        currentCheck =
+            gameBoard[rowIndex][colIndex].getSign() == lastChar
+                && gameBoard[rowIndex][colIndex].getSign() != ' '
+                && help;
+
+        if (!currentCheck) {
+          help = false;
+        }
+
+        lastChar = gameBoard[rowIndex][colIndex].getSign();
+      }
+      help = true;
+
+      if (currentCheck) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public static boolean colsWinnerCheck(Cube[][] gameBoard) {
+    boolean currentCheck = false;
+    boolean help = true;
+    char lastChar;
+
+    for (int colIndex = 0; colIndex < gameBoard[0].length; colIndex++) {
+      lastChar = gameBoard[0][colIndex].getSign();
+
+      for (int rowIndex = 1; rowIndex < gameBoard.length; rowIndex++) {
+        currentCheck =
+            gameBoard[rowIndex][colIndex].getSign() == lastChar
+                && gameBoard[rowIndex][colIndex].getSign() != ' '
+                && help;
+
+        if (!currentCheck) {
+          help = false;
+        }
+
+        lastChar = gameBoard[rowIndex][colIndex].getSign();
+      }
+      help = true;
+
+      if (currentCheck) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public static boolean checkWinner(Cube[][] board) {
-    return (board[0][0].getSign() == board[0][1].getSign()
-            && board[0][0].getSign() == board[0][2].getSign()
-            && board[0][0].getSign() != ' ')
-        || (board[0][0].getSign() == board[1][1].getSign()
-            && board[0][0].getSign() == board[2][2].getSign()
-            && board[1][1].getSign() != ' ')
-        || (board[0][0].getSign() == board[1][0].getSign()
-            && board[0][0].getSign() == board[2][0].getSign()
-            && board[0][0].getSign() != ' ')
-        || (board[2][0].getSign() == board[2][1].getSign()
-            && board[2][0].getSign() == board[2][2].getSign()
-            && board[2][2].getSign() != ' ')
-        || (board[2][0].getSign() == board[1][1].getSign()
-            && board[2][0].getSign() == board[0][2].getSign()
-            && board[0][2].getSign() != ' ')
-        || (board[0][2].getSign() == board[1][2].getSign()
-            && board[0][2].getSign() == board[2][2].getSign()
-            && board[0][2].getSign() != ' ')
-        || (board[0][1].getSign() == board[1][1].getSign()
-            && board[0][1].getSign() == board[2][1].getSign()
-            && board[2][1].getSign() != ' ')
-        || (board[1][0].getSign() == board[1][1].getSign()
-            && board[1][0].getSign() == board[1][2].getSign()
-            && board[1][0].getSign() != ' ');
+
+    return colsWinnerCheck(board)
+        || rowsWinnerCheck(board)
+        || diagonalWinnerCheck(board)
+        || reverseDiagonalWinnerCheck(board);
+    /*
+        return (board[0][0].getSign() == board[0][1].getSign()
+                && board[0][0].getSign() == board[0][2].getSign()
+                && board[0][0].getSign() != ' ')
+            || (board[0][0].getSign() == board[1][1].getSign()
+                && board[0][0].getSign() == board[2][2].getSign()
+                && board[1][1].getSign() != ' ')
+            || (board[0][0].getSign() == board[1][0].getSign()
+                && board[0][0].getSign() == board[2][0].getSign()
+                && board[0][0].getSign() != ' ')
+            || (board[2][0].getSign() == board[2][1].getSign()
+                && board[2][0].getSign() == board[2][2].getSign()
+                && board[2][2].getSign() != ' ')
+            || (board[2][0].getSign() == board[1][1].getSign()
+                && board[2][0].getSign() == board[0][2].getSign()
+                && board[0][2].getSign() != ' ')
+            || (board[0][2].getSign() == board[1][2].getSign()
+                && board[0][2].getSign() == board[2][2].getSign()
+                && board[0][2].getSign() != ' ')
+            || (board[0][1].getSign() == board[1][1].getSign()
+                && board[0][1].getSign() == board[2][1].getSign()
+                && board[2][1].getSign() != ' ')
+            || (board[1][0].getSign() == board[1][1].getSign()
+                && board[1][0].getSign() == board[1][2].getSign()
+                && board[1][0].getSign() != ' ');
+
+    */
   }
 
   public static int findNumOfTurn(Cube[][] board) {
